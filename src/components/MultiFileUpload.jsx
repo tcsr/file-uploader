@@ -14,6 +14,7 @@ export default function MultiFileUpload() {
     const toast = useRef(null);
     const [totalSize, setTotalSize] = useState(0);
     const [fileContents, setFileContents] = useState([]);
+    const [files, setFiles] = useState([]);
     const fileUploadRef = useRef(null);
 
     const formatSize = (size) => {
@@ -24,15 +25,18 @@ export default function MultiFileUpload() {
         return parseFloat((size / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     };
 
+    const updateTotalSize = (fileList) => {
+        const total = fileList.reduce((acc, file) => acc + file.size, 0);
+        setTotalSize(total);
+    };
+
     const onTemplateSelect = (e) => {
-        let _totalSize = totalSize;
-        let files = e.files;
-
-        Object.keys(files).forEach((key) => {
-            _totalSize += files[key].size || 0;
+        const selectedFiles = Array.from(e.files);
+        setFiles((prevFiles) => {
+            const newFiles = [...prevFiles, ...selectedFiles];
+            updateTotalSize(newFiles);
+            return newFiles;
         });
-
-        setTotalSize(_totalSize);
     };
 
     const handleUploadAsDataURL = async () => {
@@ -107,23 +111,33 @@ export default function MultiFileUpload() {
     };
 
     const onTemplateRemove = (file, callback) => {
-        setTotalSize(totalSize - file.size);
+        setFiles((prevFiles) => {
+            const newFiles = prevFiles.filter(f => f !== file);
+            updateTotalSize(newFiles);
+            return newFiles;
+        });
         callback();
     };
 
     const onTemplateClear = () => {
         setTotalSize(0);
+        setFiles([]);
     };
 
     const headerTemplate = (options) => {
         const { className, chooseButton, cancelButton } = options;
         const formattedValue = totalSize > 0 ? formatSize(totalSize) : '0 B';
+        const totalFiles = files.length;
 
         return (
             <div className={className} style={{ backgroundColor: 'transparent', display: 'flex', alignItems: 'center', padding: '1rem', borderBottom: '1px solid #ddd', background: '#fff', zIndex: 1000 }}>
                 {chooseButton}
                 {cancelButton}
-                <div className="flex align-items-center gap-3 ml-auto" style={{ padding: '0.5rem', backgroundColor: '#f4f4f4', borderRadius: '0.5rem' }}>
+                <div className="flex align-items-center gap-2 ml-auto mr-2" style={{ padding: '0.5rem', backgroundColor: '#f4f4f4', borderRadius: '0.5rem' }}>
+                    <span style={{ fontWeight: 'bold' }}>Total Files:</span>
+                    <span>{totalFiles}</span>
+                </div>
+                <div className="flex align-items-center gap-2" style={{ padding: '0.5rem', backgroundColor: '#f4f4f4', borderRadius: '0.5rem' }}>
                     <span style={{ fontWeight: 'bold' }}>Total Size:</span>
                     <span>{formattedValue}</span>
                 </div>
@@ -135,6 +149,9 @@ export default function MultiFileUpload() {
         return (
             <div style={{ width: '100%' }}>
                 <div className="flex align-items-center flex-wrap" style={{ padding: '0.25rem 0' }}>
+                    <div className="flex align-items-center" style={{ width: '5%' }}>
+                        <span>{props?.index + 1}.</span>
+                    </div>
                     <div className="flex align-items-center" style={{ width: '40%' }}>
                         {file.type.startsWith('image/') ? (
                             <img alt={file.name} role="presentation" src={file.objectURL} width={100} />
@@ -148,6 +165,7 @@ export default function MultiFileUpload() {
                     </div>
                     <Tag value={formatSize(file.size)} severity="warning" className="px-3 py-2" />
                     <Button type="button" icon="pi pi-times" className="p-button-outlined p-button-rounded p-button-danger ml-auto" onClick={() => onTemplateRemove(file, props.onRemove)} />
+                    <Divider />
                 </div>
             </div>
         );
@@ -164,7 +182,7 @@ export default function MultiFileUpload() {
         );
     };
 
-    const chooseOptions = { icon: 'pi pi-fw pi-upload', iconOnly: true, className: 'custom-choose-btn p-button-rounded p-button-outlined' };
+    const chooseOptions = { icon: 'pi pi-fw pi-file-plus', iconOnly: true, className: 'custom-choose-btn p-button-rounded p-button-outlined' };
     const cancelOptions = { icon: 'pi pi-fw pi-times', iconOnly: true, className: 'custom-cancel-btn p-button-danger p-button-rounded p-button-outlined' };
 
     // Hide the main scrollbar
@@ -175,35 +193,37 @@ export default function MultiFileUpload() {
         };
     }, []);
 
+    const hasFiles = files.length > 0;
+
     return (
         <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
             <Toast ref={toast}></Toast>
 
-            <Tooltip target=".custom-choose-btn" content="Choose" position="bottom" />
+            <Tooltip target=".custom-choose-btn" content="Add Files" position="bottom" />
             <Tooltip target=".custom-cancel-btn" content="Clear" position="bottom" />
 
-            <div style={{ flexGrow: 1, overflowY: 'auto', marginTop: '65px', marginBottom: '80px' }}>
+            <div style={{ flexGrow: 1, overflowY: 'auto', marginTop: '11rem', marginBottom: '1.75rem' }}>
                 <div className="p-card" style={{ background: '#fff', borderRadius: '2px' }}>
-                    <FileUpload ref={fileUploadRef} name="demo[]" url="/api/upload" multiple accept="*" maxFileSize={10000000}
+                    <FileUpload ref={fileUploadRef} name="demo[]" multiple accept="*" maxFileSize={10000000}
                         onUpload={onTemplateUpload} onSelect={onTemplateSelect} onError={onTemplateClear} onClear={onTemplateClear}
                         headerTemplate={headerTemplate} itemTemplate={itemTemplate} emptyTemplate={emptyTemplate}
                         chooseOptions={chooseOptions} cancelOptions={cancelOptions} />
 
-                    <div style={{ marginTop: '1rem' }}>
+                    {/* <div style={{ marginTop: '1rem' }}>
                         {fileUploadRef.current && fileUploadRef.current.getFiles() && Array.from(fileUploadRef.current.getFiles()).map((file, index) => (
                             <React.Fragment key={index}>
                                 {itemTemplate(file, { onRemove: () => fileUploadRef.current.remove(file), formatSize })}
                                 <Divider />
                             </React.Fragment>
                         ))}
-                    </div>
+                    </div> */}
                 </div>
             </div>
 
             <div style={{ position: 'fixed', bottom: 0, width: '100%', background: '#fff', borderTop: '1px solid #ddd', zIndex: 1000, padding: '1rem' }}>
-                <div className="footer" style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <Button label="Upload as Data URL" icon="pi pi-cloud-upload" className="p-button-success" onClick={handleUploadAsDataURL} />
-                    <Button label="Upload as Text" icon="pi pi-cloud-upload" className="p-button-info" onClick={handleUploadAsText} />
+                <div className="footer" style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                    {/* <Button label="Upload as Data URL" icon="pi pi-cloud-upload" className="p-button-success" onClick={handleUploadAsDataURL} /> */}
+                    <Button label="Upload Files" icon="pi pi-cloud-upload" className="p-button-success p-3" onClick={handleUploadAsText} disabled={!hasFiles} />
                 </div>
             </div>
         </div>

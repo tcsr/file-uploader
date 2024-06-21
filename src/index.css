@@ -39,16 +39,22 @@ a {
 
 .layout-main-container {
   margin: 1px;
-  /* padding-left: 15px;
-  padding-right: 15px; */
   padding-top: 4rem !important;
   padding-bottom: 3.5rem !important;
+}
+
+.css-hyum1k-MuiToolbar-root {
+  min-height: 50px !important;
+}
+
+.p-fileupload .p-fileupload-content {
+  padding: 1rem !important;
 }
 
 .p-fileupload-buttonbar {
   position: fixed;
   left: 0;
-  top: 60px; /* Adjust this value to the height of your app's top bar */
+  top: 50px;
   width: 100%;
   background: #fff;
   border-bottom: 1px solid #ddd;
