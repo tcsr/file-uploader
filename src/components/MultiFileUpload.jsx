@@ -10,7 +10,7 @@ import 'primereact/resources/themes/saga-blue/theme.css';
 import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
 
-export default function MultiFileUpload() {
+export default function MultiFileUpload({ onComplete }) {
     const toast = useRef(null);
     const [totalSize, setTotalSize] = useState(0);
     const [fileContents, setFileContents] = useState([]);
@@ -186,12 +186,12 @@ export default function MultiFileUpload() {
     const cancelOptions = { icon: 'pi pi-fw pi-times', iconOnly: true, className: 'custom-cancel-btn p-button-danger p-button-rounded p-button-outlined' };
 
     // Hide the main scrollbar
-    useEffect(() => {
-        document.body.style.overflow = 'hidden';
-        return () => {
-            document.body.style.overflow = 'auto';
-        };
-    }, []);
+    // useEffect(() => {
+    //     document.body.style.overflow = 'hidden';
+    //     return () => {
+    //         document.body.style.overflow = 'auto';
+    //     };
+    // }, []);
 
     const hasFiles = files.length > 0;
 
@@ -202,17 +202,17 @@ export default function MultiFileUpload() {
             <Tooltip target=".custom-choose-btn" content="Add Files" position="bottom" />
             <Tooltip target=".custom-cancel-btn" content="Clear" position="bottom" />
 
-            <div style={{ flexGrow: 1, overflowY: 'auto', marginTop: '11rem', marginBottom: '1.75rem' }}>
+            <div style={{ flexGrow: 1, overflowY: 'auto' }}>
                 <div className="p-card" style={{ background: '#fff', borderRadius: '2px' }}>
                     <FileUpload ref={fileUploadRef} name="demo[]" multiple accept="*" maxFileSize={10000000}
                         onUpload={onTemplateUpload} onSelect={onTemplateSelect} onError={onTemplateClear} onClear={onTemplateClear}
                         headerTemplate={headerTemplate} itemTemplate={itemTemplate} emptyTemplate={emptyTemplate}
                         chooseOptions={chooseOptions} cancelOptions={cancelOptions} />
 
-                    {/* <div style={{ marginTop: '1rem' }}>
-                        {fileUploadRef.current && fileUploadRef.current.getFiles() && Array.from(fileUploadRef.current.getFiles()).map((file, index) => (
+                    {/* <div style={{ maxHeight: '400px', overflowY: 'auto', marginTop: '1rem' }}>
+                        {files.map((file, index) => (
                             <React.Fragment key={index}>
-                                {itemTemplate(file, { onRemove: () => fileUploadRef.current.remove(file), formatSize })}
+                                {itemTemplate(file, { onRemove: () => onTemplateRemove(file, () => {}) })}
                                 <Divider />
                             </React.Fragment>
                         ))}
@@ -220,10 +220,9 @@ export default function MultiFileUpload() {
                 </div>
             </div>
 
-            <div style={{ position: 'fixed', bottom: 0, width: '100%', background: '#fff', borderTop: '1px solid #ddd', zIndex: 1000, padding: '1rem' }}>
+            <div style={{width: '100%', background: '#fff', borderTop: '1px solid #ddd', zIndex: 1000, padding: '1rem' }}>
                 <div className="footer" style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                    {/* <Button label="Upload as Data URL" icon="pi pi-cloud-upload" className="p-button-success" onClick={handleUploadAsDataURL} /> */}
-                    <Button label="Upload Files" icon="pi pi-cloud-upload" className="p-button-success p-3" onClick={handleUploadAsText} disabled={!hasFiles} />
+                    <Button label="Upload Files" icon="pi pi-cloud-upload" className="p-button-success p-3" onClick={() => { handleUploadAsText(); onComplete(); }} disabled={!hasFiles} />
                 </div>
             </div>
         </div>

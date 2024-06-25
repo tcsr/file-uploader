@@ -51,7 +51,7 @@ a {
   padding: 1rem !important;
 }
 
-.p-fileupload-buttonbar {
+/* .p-fileupload-buttonbar {
   position: fixed;
   left: 0;
   top: 50px;
@@ -64,4 +64,19 @@ a {
   display: flex;
   justify-content: space-between;
   align-items: center;
-}
+} */
+
+/* .p-fileupload-buttonbar {
+  position: fixed;
+  left: 0;
+  top: 50px;
+  width: 100%;
+  background: #fff;
+  border-bottom: 1px solid #ddd;
+  z-index: 1000;
+  padding: 1rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+} */
