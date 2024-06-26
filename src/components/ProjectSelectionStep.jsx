@@ -4,7 +4,7 @@ import { Box, Select, MenuItem, InputLabel, FormControl, CircularProgress, Typog
 import { useProject } from './ProjectContext';
 import axios from 'axios';
 
-const StepOne = ({ onComplete }) => {
+const ProjectSelectionStep = ({ onComplete }) => {
   const { setProject } = useProject();
   const [projects, setProjects] = useState([]);
   const [selectedProject, setSelectedProject] = useState('');
@@ -62,4 +62,4 @@ const StepOne = ({ onComplete }) => {
   );
 };
 
-export default StepOne;
+export default ProjectSelectionStep;

@@ -3,7 +3,7 @@ import { Box, Button, CircularProgress, Snackbar, Alert } from '@mui/material';
 import { useProject } from './ProjectContext';
 import axios from 'axios';
 
-const StepThree = ({ onComplete }) => {
+const CheckmarxStep = ({ onComplete }) => {
     const { project } = useProject();
     const [loading, setLoading] = useState(false);
     const [alert, setAlert] = useState({ open: false, severity: '', message: '' });
@@ -11,13 +11,13 @@ const StepThree = ({ onComplete }) => {
     const handleComplete = async () => {
         setLoading(true);
         try {
-            const response = await axios.post('YOUR_API_ENDPOINT_FOR_KUBERNETES', { project });
+            const response = await axios.post('YOUR_API_ENDPOINT_FOR_CHECKMARX', { project });
             console.log(response.data);
-            setAlert({ open: true, severity: 'success', message: 'Kubernetes connection created successfully' });
+            setAlert({ open: true, severity: 'success', message: 'Checkmarx connection created successfully' });
             onComplete();
         } catch (error) {
-            console.error('Error creating Kubernetes connection', error);
-            setAlert({ open: true, severity: 'error', message: 'Failed to create Kubernetes connection' });
+            console.error('Error creating Checkmarx connection', error);
+            setAlert({ open: true, severity: 'error', message: 'Failed to create Checkmarx connection' });
         } finally {
             setLoading(false);
         }
@@ -33,7 +33,7 @@ const StepThree = ({ onComplete }) => {
                 disabled={!project || loading}
                 startIcon={loading ? <CircularProgress size={24} /> : null}
             >
-                {loading ? 'Creating...' : 'Create Kubernetes Service Connection'}
+                {loading ? 'Creating...' : 'Create Checkmarx Service Connection'}
             </Button>
             <Snackbar open={alert.open} autoHideDuration={6000} onClose={() => setAlert({ ...alert, open: false })} anchorOrigin={{ vertical: 'top', horizontal: 'right' }}>
                 <Alert onClose={() => setAlert({ ...alert, open: false })} severity={alert.severity} sx={{ width: '100%' }} variant="filled">
@@ -44,4 +44,4 @@ const StepThree = ({ onComplete }) => {
     );
 };
 
-export default StepThree;
+export default CheckmarxStep;
