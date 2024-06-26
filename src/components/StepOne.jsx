@@ -1,35 +1,63 @@
-import React, { useState } from 'react';
-import { Box, Button, Select, MenuItem, InputLabel, FormControl } from '@mui/material';
+// StepOne.js
+import React, { useState, useEffect } from 'react';
+import { Box, Select, MenuItem, InputLabel, FormControl, CircularProgress, Typography } from '@mui/material';
+import { useProject } from './ProjectContext';
+import axios from 'axios';
 
 const StepOne = ({ onComplete }) => {
-  const [project, setProject] = useState('');
+  const { setProject } = useProject();
+  const [projects, setProjects] = useState([]);
+  const [selectedProject, setSelectedProject] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    async function fetchProjects() {
+      try {
+        const response = await axios.get('http://localhost:3000/migrate/projects');
+        setProjects(response.data || []);
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching projects', error);
+        setError('Failed to fetch projects');
+        setLoading(false);
+      }
+    }
+    fetchProjects();
+  }, []);
 
   const handleProjectChange = (event) => {
-    setProject(event.target.value);
-  };
-
-  const handleComplete = () => {
+    const project = event.target.value;
+    setSelectedProject(project);
+    setProject(project);
     onComplete();
   };
 
+  if (loading) {
+    return <CircularProgress />;
+  }
+
+  if (error) {
+    return <Typography color="error">{error}</Typography>;
+  }
+
   return (
-    <Box>
+    <Box className="mb-2">
       <FormControl fullWidth>
         <InputLabel id="project-select-label">Select Project</InputLabel>
         <Select
           labelId="project-select-label"
-          value={project}
+          value={selectedProject}
           label="Select Project"
           onChange={handleProjectChange}
         >
-          <MenuItem value="project1">Project 1</MenuItem>
-          <MenuItem value="project2">Project 2</MenuItem>
-          <MenuItem value="project3">Project 3</MenuItem>
+          {projects && projects?.map((proj) => (
+            <MenuItem key={proj.projectId} value={proj}>
+              {proj.projectName}
+            </MenuItem>
+          ))}
         </Select>
       </FormControl>
-      <Button variant="contained" color="primary" onClick={handleComplete} disabled={!project} sx={{ mt: 2 }}>
-        Complete Step
-      </Button>
     </Box>
   );
 };

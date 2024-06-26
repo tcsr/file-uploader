@@ -6,6 +6,10 @@ import { Tooltip } from 'primereact/tooltip';
 import { Tag } from 'primereact/tag';
 import { Divider } from 'primereact/divider';
 import axios from 'axios';
+import { useProject } from './ProjectContext';
+import CircularProgress from '@mui/material/CircularProgress';
+import Snackbar from '@mui/material/Snackbar';
+import Alert from '@mui/material/Alert';
 import 'primereact/resources/themes/saga-blue/theme.css';
 import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
@@ -15,7 +19,10 @@ export default function MultiFileUpload({ onComplete }) {
     const [totalSize, setTotalSize] = useState(0);
     const [fileContents, setFileContents] = useState([]);
     const [files, setFiles] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [alert, setAlert] = useState({ open: false, severity: '', message: '' });
     const fileUploadRef = useRef(null);
+    const { project } = useProject();
 
     const formatSize = (size) => {
         if (size === 0) return '0 B';
@@ -40,10 +47,9 @@ export default function MultiFileUpload({ onComplete }) {
     };
 
     const handleUploadAsDataURL = async () => {
-        const files = fileUploadRef.current?.getFiles();
-        if (!files) return;
+        if (!files.length) return;
 
-        const promises = Array.from(files).map((file) => {
+        const promises = files.map((file) => {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
                 reader.onload = () => {
@@ -54,26 +60,30 @@ export default function MultiFileUpload({ onComplete }) {
             });
         });
 
+        setLoading(true);
         try {
             const results = await Promise.all(promises);
             setFileContents(results);
             toast.current.show({ severity: 'info', summary: 'Success', detail: 'Files uploaded as Data URL' });
 
             // Send the data to the dummy API
-            const response = await axios.post('https://jsonplaceholder.typicode.com/posts', { files: results });
+            const response = await axios.post('https://jsonplaceholder.typicode.com/posts', { files: results, project: project.name });
             console.log(response.data);
             toast.current.show({ severity: 'success', summary: 'API Success', detail: 'Files submitted successfully' });
+            setAlert({ open: true, severity: 'success', message: 'Files submitted successfully' });
         } catch (error) {
             console.error('Error reading files', error);
             toast.current.show({ severity: 'error', summary: 'Error', detail: 'Failed to upload files' });
+            setAlert({ open: true, severity: 'error', message: 'Failed to upload files' });
+        } finally {
+            setLoading(false);
         }
     };
 
     const handleUploadAsText = async () => {
-        const files = fileUploadRef.current?.getFiles();
-        if (!files) return;
+        if (!files.length) return;
 
-        const promises = Array.from(files).map((file) => {
+        const promises = files.map((file) => {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
                 reader.onload = () => {
@@ -84,18 +94,23 @@ export default function MultiFileUpload({ onComplete }) {
             });
         });
 
+        setLoading(true);
         try {
             const results = await Promise.all(promises);
             setFileContents(results);
             toast.current.show({ severity: 'info', summary: 'Success', detail: 'Files uploaded as Text' });
 
             // Send the data to the dummy API
-            const response = await axios.post('https://jsonplaceholder.typicode.com/posts', { files: results });
+            const response = await axios.post('https://jsonplaceholder.typicode.com/posts', { files: results, project: project.name });
             console.log(response.data);
             toast.current.show({ severity: 'success', summary: 'API Success', detail: 'Files submitted successfully' });
+            setAlert({ open: true, severity: 'success', message: 'Files submitted successfully' });
         } catch (error) {
             console.error('Error reading files', error);
             toast.current.show({ severity: 'error', summary: 'Error', detail: 'Failed to upload files' });
+            setAlert({ open: true, severity: 'error', message: 'Failed to upload files' });
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -150,7 +165,7 @@ export default function MultiFileUpload({ onComplete }) {
             <div style={{ width: '100%' }}>
                 <div className="flex align-items-center flex-wrap" style={{ padding: '0.25rem 0' }}>
                     <div className="flex align-items-center" style={{ width: '5%' }}>
-                        <span>{props?.index + 1}.</span>
+                        <span>{props.index + 1}.</span>
                     </div>
                     <div className="flex align-items-center" style={{ width: '40%' }}>
                         {file.type.startsWith('image/') ? (
@@ -165,8 +180,8 @@ export default function MultiFileUpload({ onComplete }) {
                     </div>
                     <Tag value={formatSize(file.size)} severity="warning" className="px-3 py-2" />
                     <Button type="button" icon="pi pi-times" className="p-button-outlined p-button-rounded p-button-danger ml-auto" onClick={() => onTemplateRemove(file, props.onRemove)} />
-                    <Divider />
                 </div>
+                <Divider />
             </div>
         );
     };
@@ -206,25 +221,31 @@ export default function MultiFileUpload({ onComplete }) {
                 <div className="p-card" style={{ background: '#fff', borderRadius: '2px' }}>
                     <FileUpload ref={fileUploadRef} name="demo[]" multiple accept="*" maxFileSize={10000000}
                         onUpload={onTemplateUpload} onSelect={onTemplateSelect} onError={onTemplateClear} onClear={onTemplateClear}
-                        headerTemplate={headerTemplate} itemTemplate={itemTemplate} emptyTemplate={emptyTemplate}
+                        headerTemplate={headerTemplate} itemTemplate={(file, props) => itemTemplate(file, { ...props, index: files.indexOf(file) })} emptyTemplate={emptyTemplate}
                         chooseOptions={chooseOptions} cancelOptions={cancelOptions} />
-
-                    {/* <div style={{ maxHeight: '400px', overflowY: 'auto', marginTop: '1rem' }}>
-                        {files.map((file, index) => (
-                            <React.Fragment key={index}>
-                                {itemTemplate(file, { onRemove: () => onTemplateRemove(file, () => {}) })}
-                                <Divider />
-                            </React.Fragment>
-                        ))}
-                    </div> */}
                 </div>
             </div>
 
-            <div style={{width: '100%', background: '#fff', borderTop: '1px solid #ddd', zIndex: 1000, padding: '1rem' }}>
+            <div style={{ width: '100%', background: '#fff', borderTop: '1px solid #ddd', zIndex: 1000, padding: '1rem' }}>
                 <div className="footer" style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                    <Button label="Upload Files" icon="pi pi-cloud-upload" className="p-button-success p-3" onClick={() => { handleUploadAsText(); onComplete(); }} disabled={!hasFiles} />
+                    <Button
+                        label="Upload Files"
+                        icon="pi pi-cloud-upload"
+                        className="p-button-success p-3"
+                        onClick={() => { handleUploadAsText(); onComplete(); }}
+                        disabled={!hasFiles || !project || loading}
+                        startIcon={loading ? <CircularProgress size={24} /> : null}
+                    >
+                        {loading ? 'Uploading...' : 'Upload Files'}
+                    </Button>
                 </div>
             </div>
+
+            <Snackbar open={alert.open} autoHideDuration={6000} onClose={() => setAlert({ ...alert, open: false })}>
+                <Alert onClose={() => setAlert({ ...alert, open: false })} severity={alert.severity} sx={{ width: '100%' }}>
+                    {alert.message}
+                </Alert>
+            </Snackbar>
         </div>
     );
 }
